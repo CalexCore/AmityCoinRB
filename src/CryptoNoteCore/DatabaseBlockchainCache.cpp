@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
-// Copyright (c) 2018-2019, The TurtleCoin Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 //
 // Please see the included LICENSE file for more information.
 
@@ -1043,6 +1043,8 @@ uint8_t DatabaseBlockchainCache::getBlockMajorVersionForHeight(uint32_t height) 
   upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_3, currency.upgradeHeight(BLOCK_MAJOR_VERSION_3));
   upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_4, currency.upgradeHeight(BLOCK_MAJOR_VERSION_4));
   upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_5, currency.upgradeHeight(BLOCK_MAJOR_VERSION_5));
+  upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_6, currency.upgradeHeight(BLOCK_MAJOR_VERSION_6));
+  upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_7, currency.upgradeHeight(BLOCK_MAJOR_VERSION_7));
   return upgradeManager.getBlockMajorVersion(height);
 }
 

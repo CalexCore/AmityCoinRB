@@ -32,15 +32,27 @@
 #define CN_TURTLE_ITERATIONS            131072
 
 // CryptoNight Soft Shell Definitions
-#define CN_SOFT_SHELL_MEMORY            262144 // This defines the lowest memory utilization for our curve
-#define CN_SOFT_SHELL_WINDOW            2048 // This defines how many blocks we cycle through as part of our algo sine wave
-#define CN_SOFT_SHELL_MULTIPLIER        3 // This defines how big our steps are for each block and
-                                          // ultimately determines how big our sine wave is. A smaller value means a bigger wave
+/* -----version 1 in AmityCoin----- */
+#define CN_SOFT_SHELL_MEMORY            262144 // LOW = 256KB
+#define CN_SOFT_SHELL_WINDOW            512 // Lambda = CN_SOFT_SHELL_WINDOW * 2  (1024 blocks)
+#define CN_SOFT_SHELL_MULTIPLIER        1 / 7 // 0.143
 #define CN_SOFT_SHELL_ITER              (CN_SOFT_SHELL_MEMORY / 2)
 #define CN_SOFT_SHELL_PAD_MULTIPLIER    (CN_SOFT_SHELL_WINDOW / CN_SOFT_SHELL_MULTIPLIER)
 #define CN_SOFT_SHELL_ITER_MULTIPLIER   (CN_SOFT_SHELL_PAD_MULTIPLIER / 2)
 
 #if (((CN_SOFT_SHELL_WINDOW * CN_SOFT_SHELL_PAD_MULTIPLIER) + CN_SOFT_SHELL_MEMORY) > CN_PAGE_SIZE)
+#error The CryptoNight Soft Shell Parameters you supplied will exceed normal paging operations.
+#endif
+
+/* -----version 2 in AmityCoin----- */
+#define CN_SOFT_SHELL_MEMORY_2          (256 * 1024)
+#define CN_SOFT_SHELL_WINDOW_2          2048
+#define CN_SOFT_SHELL_MULTIPLIER_2      3
+#define CN_SOFT_SHELL_ITER_2            (CN_SOFT_SHELL_MEMORY_2 / 2)
+#define CN_SOFT_SHELL_PAD_MULTIPLIER_2  (CN_SOFT_SHELL_WINDOW_2 / CN_SOFT_SHELL_MULTIPLIER_2)
+#define CN_SOFT_SHELL_ITER_MULTIPLIER_2 (CN_SOFT_SHELL_PAD_MULTIPLIER_2 / 2)
+
+#if (((CN_SOFT_SHELL_WINDOW_2 * CN_SOFT_SHELL_PAD_MULTIPLIER_2) + CN_SOFT_SHELL_MEMORY_2) > CN_PAGE_SIZE)
 #error The CryptoNight Soft Shell Parameters you supplied will exceed normal paging operations.
 #endif
 
@@ -166,6 +178,20 @@ namespace Crypto {
 
     uint32_t scratchpad = CN_SOFT_SHELL_MEMORY + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_PAD_MULTIPLIER);
     uint32_t iterations = CN_SOFT_SHELL_ITER + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_ITER_MULTIPLIER);
+    uint32_t pagesize = scratchpad;
+
+    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 1, 1, 0, pagesize, scratchpad, iterations);
+  }
+
+  inline void cn_soft_shell_slow_hash_v1_v2(const void *data, size_t length, Hash &hash, uint32_t height) {
+    uint32_t base_offset = (height % CN_SOFT_SHELL_WINDOW_2);
+    int32_t offset = (height % (CN_SOFT_SHELL_WINDOW_2 * 2)) - (base_offset * 2);
+    if (offset < 0) {
+      offset = base_offset;
+    }
+
+    uint32_t scratchpad = CN_SOFT_SHELL_MEMORY_2 + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_PAD_MULTIPLIER_2);
+    uint32_t iterations = CN_SOFT_SHELL_ITER_2 + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_ITER_MULTIPLIER_2);
     uint32_t pagesize = scratchpad;
 
     cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 1, 1, 0, pagesize, scratchpad, iterations);

@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
-// Copyright (c) 2018, The Galaxia Project Developers
+// Copyright (c) 2014-2018, The Galaxia Project Developers
 // Copyright (c) 2018, The TurtleCoin Developers
 //
 // Please see the included LICENSE file for more information.
@@ -201,6 +201,8 @@ Core::Core(const Currency& currency, std::shared_ptr<Logging::ILogger> logger, C
   upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_3, currency.upgradeHeight(BLOCK_MAJOR_VERSION_3));
   upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_4, currency.upgradeHeight(BLOCK_MAJOR_VERSION_4));
   upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_5, currency.upgradeHeight(BLOCK_MAJOR_VERSION_5));
+  upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_6, currency.upgradeHeight(BLOCK_MAJOR_VERSION_6));
+  upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_7, currency.upgradeHeight(BLOCK_MAJOR_VERSION_7));
 
   transactionPool = std::unique_ptr<ITransactionPoolCleanWrapper>(new TransactionPoolCleanWrapper(
     std::unique_ptr<ITransactionPool>(new TransactionPool(logger)),
@@ -1689,7 +1691,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
           continue;
         }
 
-        logger(Logging::DEBUGGING, Logging::BRIGHT_GREEN)
+        logger(Logging::DEBUGGING, Logging::BRIGHT_BLUE)
             << "Setting extra for block: " << b.baseTransaction.extra.size() << ", try_count=" << tryCount;
       }
     }
@@ -2410,12 +2412,15 @@ bool Core::validateBlockTemplateTransaction(
 {
     const auto &transaction = cachedTransaction.getTransaction();
 
-    if (transaction.extra.size() >= CryptoNote::parameters::MAX_EXTRA_SIZE_V2)
+    if (blockHeight >= CryptoNote::parameters::MAX_EXTRA_SIZE_V2_HEIGHT)
     {
-        logger(Logging::TRACE) << "Not adding transaction "
-                               << cachedTransaction.getTransactionHash()
-                               << " to block template, extra too large.";
-        return false;
+        if (transaction.extra.size() >= CryptoNote::parameters::MAX_EXTRA_SIZE_V2)
+        {
+            logger(Logging::TRACE) << "Not adding transaction "
+                                   << cachedTransaction.getTransactionHash()
+                                   << " to block template, extra too large.";
+            return false;
+        }
     }
 
     auto [success, error] = Mixins::validate({cachedTransaction}, blockHeight);
